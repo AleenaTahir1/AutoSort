@@ -22,13 +22,11 @@ export function Sidebar({ activeTab, onTabChange, isDarkMode }: SidebarProps) {
       isDarkMode ? "bg-gray-900 border-white" : "bg-white border-black"
     }`}>
       {/* Logo */}
-      <div className={`p-6 border-b-2 flex-shrink-0 ${isDarkMode ? "border-white" : "border-black"}`}>
+      <div className={`p-4 border-b-2 flex-shrink-0 ${isDarkMode ? "border-white" : "border-black"}`}>
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-md overflow-hidden">
-            <img src="/logo.png" alt="AutoSort" className="w-full h-full object-cover" />
-          </div>
+          <img src="/logo.png" alt="AutoSort" className="w-10 h-10" />
           <div>
-            <h1 className={`text-xl font-bold ${isDarkMode ? "text-white" : "text-black"}`}>
+            <h1 className={`text-lg font-bold ${isDarkMode ? "text-white" : "text-black"}`}>
               AutoSort
             </h1>
             <p className={`text-xs font-medium ${isDarkMode ? "text-white/70" : "text-black/70"}`}>

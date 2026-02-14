@@ -1,83 +1,154 @@
-# AutoSort - Downloads Folder Organizer
+<div align="center">
 
-A cross-platform desktop application that automatically organizes your Downloads folder by sorting files into categorized subfolders.
+<img src="public/logo.png" alt="AutoSort Logo" width="120" />
+
+# AutoSort
+
+**Automatic file organizer for Windows**
+
+Keep any folder clean with automatic file sorting based on custom rules.
+
+[![Release](https://img.shields.io/github/v/release/AleenaTahir1/AutoSort)](https://github.com/AleenaTahir1/AutoSort/releases)
+[![Build](https://img.shields.io/github/actions/workflow/status/AleenaTahir1/AutoSort/ci.yml)](https://github.com/AleenaTahir1/AutoSort/actions)
+[![License](https://img.shields.io/badge/license-Source%20Available-blue)](LICENSE.txt)
+
+</div>
+
+---
+
+## Why AutoSort
+
+Your Downloads folder has 847 unsorted files. PDFs, images, installers, random files everywhere. Finding anything is a nightmare.
+
+AutoSort watches any folder you choose and automatically sorts files into organized subfolders based on your rules. Set it up once and never manually organize files again.
+
+---
 
 ## Features
 
-- **Automatic File Watching**: Monitors your Downloads folder for new files
-- **Smart Sorting Rules**: Built-in rules for common file types (Images, Documents, Archives, etc.)
-- **Custom Rules**: Create your own sorting rules with flexible conditions
-- **Grace Period**: Configurable delay before moving files, with option to cancel or move immediately
-- **Undo Support**: Easily restore files to their original location
-- **System Tray**: Runs quietly in the background
-- **Dark Mode**: Beautiful light and dark themes
-- **Cross-Platform**: Works on Windows, macOS, and Linux
+- **Auto-organize** — Files are automatically moved to the right folder based on extension, name, or size
+- **Custom rules** — Create your own sorting rules with pattern matching
+- **Grace period** — Files wait before moving, giving you time to cancel if needed
+- **Real-time watching** — Monitors folders continuously for new files
+- **One-time scan** — Instantly organize existing files with a single click
+- **Undo support** — Accidentally moved something? Undo it instantly
+- **Move history** — Track all file movements with full history
+- **Dark theme** — Neo-brutalist UI with dark mode support
+- **Any folder** — Works with Downloads, Desktop, or any folder you choose
 
-## Default Categories
+---
 
-| Category | File Types |
-|----------|------------|
-| Images | jpg, jpeg, png, gif, webp, svg, bmp, ico, tiff, raw, heic |
-| Documents | pdf, doc, docx, xls, xlsx, ppt, pptx, txt, rtf, odt, csv, epub |
-| Installers | exe, msi, dmg, pkg, deb, rpm, appimage, snap |
-| Archives | zip, rar, 7z, tar, gz, bz2, xz, tgz |
-| Audio | mp3, wav, flac, aac, ogg, m4a, wma, opus |
-| Video | mp4, mkv, avi, mov, wmv, webm, flv, m4v |
-| Code | js, ts, py, rs, go, java, cpp, c, h, cs, rb, php, swift, kt |
+## Installation
 
-## Tech Stack
+Download the latest release from the [Releases](https://github.com/AleenaTahir1/AutoSort/releases) page:
 
-- **Backend**: Rust + Tauri 2.0
-- **Frontend**: React + TypeScript
-- **Styling**: Tailwind CSS
-- **File Watching**: notify crate
+- **`.msi`** — Standard Windows installer (recommended)
+- **`.exe`** — NSIS installer
+
+---
+
+## Usage
+
+### Quick Start
+
+1. **Set watch folder** — Go to Settings and select the folder to organize
+2. **Configure rules** — Add rules for different file types (defaults included)
+3. **Scan** — Click "Scan" to organize existing files
+4. **Start** — Click "Start" to watch for new files automatically
+
+### Default Rules
+
+AutoSort comes with sensible defaults:
+
+| Rule | Extensions | Destination |
+|------|-----------|-------------|
+| Images | `.jpg`, `.png`, `.gif`, `.webp`, `.svg` | `Images/` |
+| Documents | `.pdf`, `.doc`, `.docx`, `.txt`, `.xlsx` | `Documents/` |
+| Archives | `.zip`, `.rar`, `.7z`, `.tar`, `.gz` | `Archives/` |
+| Installers | `.exe`, `.msi`, `.dmg` | `Installers/` |
+| Videos | `.mp4`, `.mkv`, `.avi`, `.mov` | `Videos/` |
+| Audio | `.mp3`, `.wav`, `.flac`, `.aac` | `Audio/` |
+
+### Controls
+
+| Button | Action |
+|--------|--------|
+| **Scan** | One-time scan of folder for existing files |
+| **Start** | Begin watching for new files |
+| **Stop** | Stop watching |
+| **Pause** | Temporarily pause file moving |
+
+---
 
 ## Development
 
-### Prerequisites
+### Requirements
 
-- [Node.js](https://nodejs.org/) (v18+)
-- [Rust](https://www.rust-lang.org/tools/install)
-- [Tauri CLI](https://tauri.app/v1/guides/getting-started/prerequisites)
+- Node.js 18+ (or Bun)
+- Rust 1.70+
+- Tauri 2 system dependencies
 
-### Setup
+### Run Locally
 
 ```bash
-# Install dependencies
+git clone https://github.com/AleenaTahir1/AutoSort.git
+cd AutoSort
 npm install
-
-# Run in development mode
 npm run tauri dev
+```
 
-# Build for production
+### Build
+
+```bash
 npm run tauri build
 ```
 
-## Project Structure
+### Project Structure
 
 ```
-autosort/
-├── src/                    # React frontend
+AutoSort/
+├── src/                    # Frontend (React + TypeScript)
 │   ├── components/         # UI components
+│   │   ├── Dashboard/      # Main dashboard with stats
+│   │   ├── Rules/          # Rule management
+│   │   ├── Settings/       # App configuration
+│   │   └── common/         # Shared components
 │   ├── hooks/              # Custom React hooks
-│   ├── lib/                # Utilities and Tauri bindings
-│   └── styles/             # CSS styles
-├── src-tauri/              # Rust backend
-│   └── src/
-│       ├── commands/       # Tauri IPC commands
-│       ├── config/         # Configuration management
-│       ├── engine/         # Sorting logic
-│       └── watcher/        # File system watcher
+│   └── lib/                # Utilities and types
+├── src-tauri/              # Backend (Rust)
+│   ├── src/
+│   │   ├── commands/       # Tauri IPC commands
+│   │   ├── config/         # Configuration management
+│   │   ├── engine/         # Sorting engine, rules, mover
+│   │   └── watcher/        # File system watcher
+│   └── capabilities/       # Tauri 2 permissions
 └── package.json
 ```
 
-## Configuration
+---
 
-Configuration is stored in:
-- **Windows**: `%APPDATA%\autosort\config.json`
-- **macOS**: `~/Library/Application Support/autosort/config.json`
-- **Linux**: `~/.config/autosort/config.json`
+## Tech Stack
+
+- **Frontend** — React 18, TypeScript, Tailwind CSS
+- **Backend** — Rust, Tauri 2
+- **File Watching** — notify crate
+- **UI Style** — Neo-Brutalist design
+- **Build** — Vite
+
+---
 
 ## License
 
-MIT
+This project uses a **Source Available** license. See [LICENSE.txt](LICENSE.txt) for details.
+
+- Free for personal and educational use
+- Free to modify for personal use
+- Commercial use requires permission
+
+---
+
+## Author
+
+**Aleena Tahir**
+
+- GitHub: [AleenaTahir1](https://github.com/AleenaTahir1)

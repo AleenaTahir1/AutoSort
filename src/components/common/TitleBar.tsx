@@ -53,13 +53,8 @@ export function TitleBar({ isDarkMode }: TitleBarProps) {
         isDarkMode ? "bg-gray-900 border-white" : "bg-white border-black"
       }`}
     >
-      {/* App Title with Logo */}
-      <div data-tauri-drag-region className="flex items-center gap-2 px-3">
-        <img src="/logo.png" alt="AutoSort" className="w-6 h-6 object-contain" />
-        <span className={`text-sm font-bold ${isDarkMode ? "text-white" : "text-black"}`}>
-          AutoSort
-        </span>
-      </div>
+      {/* Draggable area - no logo/title here since sidebar has it */}
+      <div data-tauri-drag-region className="flex-1 h-full" />
 
       {/* Window Controls */}
       <div className="flex h-full">
