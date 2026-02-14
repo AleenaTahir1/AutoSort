@@ -56,6 +56,7 @@ AutoSort watches any folder you choose and automatically sorts files into organi
 - **Undo support** — Accidentally moved something? Undo it instantly
 - **Move history** — Track all file movements with full history
 - **Dark theme** — Neo-brutalist UI with dark mode support
+- **Notifications** — Get notified when files are organized while the app is minimized or in the background (like other desktop apps)
 - **Any folder** — Works with Downloads, Desktop, or any folder you choose
 
 ---
@@ -99,6 +100,10 @@ AutoSort comes with sensible defaults:
 | **Start** | Begin watching for new files |
 | **Stop** | Stop watching |
 | **Pause** | Temporarily pause file moving |
+
+### Notifications
+
+AutoSort can show Windows notifications when files are moved. Notifications appear **only when the app is in the background** (minimized or another window in front)—so you won’t be notified while you’re using the app. Turn this on or off in **Settings → Notifications → Show notifications**.
 
 ---
 
