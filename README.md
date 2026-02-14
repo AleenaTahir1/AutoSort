@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="public/logo.png" alt="AutoSort Logo" width="120" />
+<img src="src-tauri/icons/128x128.png" alt="AutoSort Logo" width="100" />
 
 # AutoSort
 
@@ -11,6 +11,18 @@ Keep any folder clean with automatic file sorting based on custom rules.
 [![Release](https://img.shields.io/github/v/release/AleenaTahir1/AutoSort)](https://github.com/AleenaTahir1/AutoSort/releases)
 [![Build](https://img.shields.io/github/actions/workflow/status/AleenaTahir1/AutoSort/ci.yml)](https://github.com/AleenaTahir1/AutoSort/actions)
 [![License](https://img.shields.io/badge/license-Source%20Available-blue)](LICENSE.txt)
+
+</div>
+
+---
+
+## Screenshots
+
+<div align="center">
+
+| Dashboard | Rules | Settings |
+|:---------:|:-----:|:--------:|
+| <img src="screenshots/dashboard.png" width="280" /> | <img src="screenshots/rules.png" width="280" /> | <img src="screenshots/settings.png" width="280" /> |
 
 </div>
 
@@ -151,4 +163,5 @@ This project uses a **Source Available** license. See [LICENSE.txt](LICENSE.txt)
 
 **Aleena Tahir**
 
-- GitHub: [AleenaTahir1](https://github.com/AleenaTahir1)
+- GitHub: [@AleenaTahir1](https://github.com/AleenaTahir1)
+- LinkedIn: [aleenatahir](https://www.linkedin.com/in/aleenatahir/)
