@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Play, Clock, FolderOpen } from "lucide-react";
+import { X, Play, Clock, FolderOpen, Loader2 } from "lucide-react";
 import { FileIcon } from "@/components/common/FileIcon";
 import type { PendingFile } from "@/lib/types";
 
@@ -45,6 +45,7 @@ function PendingFileCard({
 
   const totalDuration = file.move_at - file.added_at;
   const progress = totalDuration > 0 ? ((totalDuration - timeLeft) / totalDuration) * 100 : 100;
+  const isMovedOrMoving = timeLeft <= 0;
 
   const cardBg = isDarkMode ? "bg-gray-900" : "bg-white";
   const borderColor = isDarkMode ? "border-white" : "border-black";
@@ -78,28 +79,35 @@ function PendingFileCard({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 text-sm font-bold bg-yellow-200 border-2 border-black px-2.5 py-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black">
-            <Clock className="w-4 h-4" />
-            {timeLeft}s
+        {isMovedOrMoving ? (
+          <div className="flex items-center gap-2 text-sm font-bold bg-cyan-300 border-2 border-black px-3 py-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            Moving...
           </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 text-sm font-bold bg-yellow-200 border-2 border-black px-2.5 py-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black">
+              <Clock className="w-4 h-4" />
+              {timeLeft}s
+            </div>
 
-          <button
-            onClick={onMoveNow}
-            className="p-2.5 border-2 border-black bg-lime-300 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
-            title="Move now"
-          >
-            <Play className="w-4 h-4" />
-          </button>
+            <button
+              onClick={onMoveNow}
+              className="p-2.5 border-2 border-black bg-lime-300 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
+              title="Move now"
+            >
+              <Play className="w-4 h-4" />
+            </button>
 
-          <button
-            onClick={onCancel}
-            className="p-2.5 border-2 border-black bg-pink-300 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
-            title="Cancel"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+            <button
+              onClick={onCancel}
+              className="p-2.5 border-2 border-black bg-pink-300 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
+              title="Cancel"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

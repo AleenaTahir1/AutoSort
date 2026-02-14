@@ -1,6 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
+use std::fs;
 use std::path::PathBuf;
 use parking_lot::RwLock;
 
@@ -15,6 +16,53 @@ pub struct MoveRecord {
     pub can_undo: bool,
 }
 
+fn get_history_path() -> PathBuf {
+    let config_dir = dirs::config_dir()
+        .unwrap_or_else(|| PathBuf::from("."))
+        .join("autosort");
+    fs::create_dir_all(&config_dir).ok();
+    config_dir.join("history.json")
+}
+
+fn load_history_from_disk(limit: usize) -> VecDeque<MoveRecord> {
+    let path = get_history_path();
+    if path.exists() {
+        match fs::read_to_string(&path) {
+            Ok(content) => {
+                match serde_json::from_str::<Vec<MoveRecord>>(&content) {
+                    Ok(records) => {
+                        let mut deque: VecDeque<MoveRecord> = records.into_iter().take(limit).collect();
+                        deque.truncate(limit);
+                        return deque;
+                    }
+                    Err(e) => {
+                        log::error!("Failed to parse history: {}", e);
+                    }
+                }
+            }
+            Err(e) => {
+                log::error!("Failed to read history: {}", e);
+            }
+        }
+    }
+    VecDeque::with_capacity(limit)
+}
+
+fn save_history_to_disk(records: &VecDeque<MoveRecord>) {
+    let path = get_history_path();
+    let vec: Vec<&MoveRecord> = records.iter().collect();
+    match serde_json::to_string_pretty(&vec) {
+        Ok(content) => {
+            if let Err(e) = fs::write(&path, content) {
+                log::error!("Failed to write history: {}", e);
+            }
+        }
+        Err(e) => {
+            log::error!("Failed to serialize history: {}", e);
+        }
+    }
+}
+
 pub struct History {
     records: RwLock<VecDeque<MoveRecord>>,
     limit: usize,
@@ -22,8 +70,9 @@ pub struct History {
 
 impl History {
     pub fn new(limit: usize) -> Self {
+        let records = load_history_from_disk(limit);
         Self {
-            records: RwLock::new(VecDeque::with_capacity(limit)),
+            records: RwLock::new(records),
             limit,
         }
     }
@@ -36,6 +85,7 @@ impl History {
         }
         
         records.push_front(record);
+        save_history_to_disk(&records);
     }
     
     pub fn get_all(&self) -> Vec<MoveRecord> {
@@ -55,10 +105,13 @@ impl History {
         if let Some(record) = records.iter_mut().find(|r| r.id == id) {
             record.can_undo = false;
         }
+        save_history_to_disk(&records);
     }
     
     pub fn clear(&self) {
-        self.records.write().clear();
+        let mut records = self.records.write();
+        records.clear();
+        save_history_to_disk(&records);
     }
     
     pub fn stats(&self) -> HistoryStats {

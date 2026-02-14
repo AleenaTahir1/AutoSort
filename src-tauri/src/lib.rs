@@ -24,6 +24,9 @@ pub fn run() {
             let history = Arc::new(History::new(config.history_limit));
             let watcher = FileWatcher::new(config, history.clone());
             
+            // Start the background processor immediately - processes pending files even without watcher
+            watcher.start_processor();
+            
             app.manage(AppState {
                 watcher: Mutex::new(watcher),
                 history,

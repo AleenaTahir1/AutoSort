@@ -31,18 +31,54 @@ pub struct FileWatcher {
     config: Arc<RwLock<AppConfig>>,
     is_running: Arc<RwLock<bool>>,
     is_paused: Arc<RwLock<bool>>,
+    processor_started: Arc<RwLock<bool>>,
 }
 
 impl FileWatcher {
     pub fn new(config: AppConfig, history: Arc<History>) -> Self {
+        let pending_files = Arc::new(RwLock::new(HashMap::new()));
+        let app_config = Arc::new(RwLock::new(config));
+        let is_paused = Arc::new(RwLock::new(false));
+        let processor_started = Arc::new(RwLock::new(false));
+
         Self {
             watcher: None,
-            pending_files: Arc::new(RwLock::new(HashMap::new())),
+            pending_files,
             history,
-            config: Arc::new(RwLock::new(config)),
+            config: app_config,
             is_running: Arc::new(RwLock::new(false)),
-            is_paused: Arc::new(RwLock::new(false)),
+            is_paused,
+            processor_started,
         }
+    }
+
+    /// Start the background processor that moves files after grace period.
+    /// This runs independently of the watcher - so Scan works even without Start.
+    pub fn start_processor(&self) {
+        // Only start once
+        {
+            let mut started = self.processor_started.write();
+            if *started {
+                return;
+            }
+            *started = true;
+        }
+
+        let pending_files = self.pending_files.clone();
+        let app_config = self.config.clone();
+        let history = self.history.clone();
+        let is_paused = self.is_paused.clone();
+
+        std::thread::spawn(move || {
+            loop {
+                if !*is_paused.read() {
+                    process_pending_files(&pending_files, &app_config, &history);
+                }
+                std::thread::sleep(Duration::from_millis(500)); // Check every 500ms for faster response
+            }
+        });
+
+        log::info!("Pending file processor started");
     }
     
     pub fn update_config(&self, config: AppConfig) {
@@ -110,22 +146,6 @@ impl FileWatcher {
             }
         });
         
-        // Spawn grace period processor thread
-        let pending_files = self.pending_files.clone();
-        let app_config = self.config.clone();
-        let history = self.history.clone();
-        let is_running = self.is_running.clone();
-        let is_paused = self.is_paused.clone();
-        
-        std::thread::spawn(move || {
-            while *is_running.read() {
-                if !*is_paused.read() {
-                    process_pending_files(&pending_files, &app_config, &history);
-                }
-                std::thread::sleep(Duration::from_secs(1));
-            }
-        });
-        
         log::info!("File watcher started for: {:?}", watch_path);
         Ok(())
     }
@@ -160,45 +180,57 @@ impl FileWatcher {
         self.pending_files.write().remove(id).is_some()
     }
     
+    /// Remove pending file and return it with config needed for move. Caller does the move outside the lock to avoid blocking pause/other commands.
+    pub fn take_pending_for_move(&self, id: &str) -> Option<(PendingFile, PathBuf, crate::config::schema::ConflictResolution)> {
+        let pending = self.pending_files.write().remove(id)?;
+        let config = self.config.read();
+        Some((
+            pending,
+            config.destination_root.clone(),
+            config.conflict_resolution.clone(),
+        ))
+    }
+
+    /// Record a successful move (add to history, bump config). Call after move_file() when done outside the lock.
+    pub fn record_successful_move(&self, record: MoveRecord) {
+        self.history.add(record);
+        let mut c = self.config.write();
+        c.total_files_moved = c.total_files_moved.saturating_add(1);
+        let to_save = c.clone();
+        drop(c);
+        let _ = save_app_config(&to_save);
+    }
+
     pub fn move_now(&self, id: &str) -> Result<(), String> {
-        let pending = {
-            let mut files = self.pending_files.write();
-            files.remove(id)
+        let (pending, destination_root, conflict_resolution) = match self.take_pending_for_move(id) {
+            Some(t) => t,
+            None => return Err("Pending file not found".to_string()),
         };
-        
-        if let Some(pending) = pending {
-            let config = self.config.read();
-            let result = move_file(
-                &pending.path,
-                &config.destination_root,
-                &pending.destination,
-                &config.conflict_resolution,
-            );
-            
-            if result.success {
-                let record = MoveRecord {
-                    id: Uuid::new_v4().to_string(),
-                    original_path: result.source,
-                    new_path: result.destination,
-                    rule_name: pending.rule_name,
-                    timestamp: Utc::now(),
-                    file_size: pending.file_size,
-                    can_undo: true,
-                };
-                self.history.add(record);
-                {
-                    let mut c = self.config.write();
-                    c.total_files_moved = c.total_files_moved.saturating_add(1);
-                    let to_save = c.clone();
-                    drop(c);
-                    let _ = save_app_config(&to_save);
-                }
-                Ok(())
-            } else {
-                Err(result.error.unwrap_or_else(|| "Unknown error".to_string()))
-            }
+
+        // Do the actual move *outside* the watcher lock so pause/status don't block
+        let result = move_file(
+            &pending.path,
+            &destination_root,
+            &pending.destination,
+            &conflict_resolution,
+        );
+
+        if result.success {
+            let record = MoveRecord {
+                id: Uuid::new_v4().to_string(),
+                original_path: result.source,
+                new_path: result.destination,
+                rule_name: pending.rule_name,
+                timestamp: Utc::now(),
+                file_size: pending.file_size,
+                can_undo: true,
+            };
+            self.record_successful_move(record);
+            Ok(())
         } else {
-            Err("Pending file not found".to_string())
+            // Put it back so user can retry
+            let _ = self.pending_files.write().insert(pending.id.clone(), pending);
+            Err(result.error.unwrap_or_else(|| "Unknown error".to_string()))
         }
     }
     
@@ -278,7 +310,12 @@ fn process_pending_files(
     history: &Arc<History>,
 ) {
     let now = Utc::now().timestamp();
-    let config = app_config.read();
+    
+    // Get config snapshot once
+    let (destination_root, conflict_resolution) = {
+        let config = app_config.read();
+        (config.destination_root.clone(), config.conflict_resolution.clone())
+    };
     
     let to_move: Vec<PendingFile> = {
         let files = pending_files.read();
@@ -287,44 +324,70 @@ fn process_pending_files(
             .cloned()
             .collect()
     };
+
+    if to_move.is_empty() {
+        return;
+    }
     
-    for pending in to_move {
-        // Remove from pending
-        pending_files.write().remove(&pending.id);
+    let mut successful_moves = 0u64;
+    
+    // Process files - spawn threads for parallel moves
+    let handles: Vec<_> = to_move.into_iter().map(|pending| {
+        let dest_root = destination_root.clone();
+        let conflict_res = conflict_resolution.clone();
+        let history_clone = history.clone();
+        let pending_files_clone = pending_files.clone();
         
-        // Check if file still exists
-        if !pending.path.exists() {
-            continue;
-        }
-        
-        let result = move_file(
-            &pending.path,
-            &config.destination_root,
-            &pending.destination,
-            &config.conflict_resolution,
-        );
-        
-        if result.success {
-            let record = MoveRecord {
-                id: Uuid::new_v4().to_string(),
-                original_path: result.source,
-                new_path: result.destination,
-                rule_name: pending.rule_name,
-                timestamp: Utc::now(),
-                file_size: pending.file_size,
-                can_undo: true,
-            };
-            history.add(record);
-            {
-                let mut c = app_config.write();
-                c.total_files_moved = c.total_files_moved.saturating_add(1);
-                let to_save = c.clone();
-                drop(c);
-                let _ = crate::config::save_config(&to_save);
+        std::thread::spawn(move || {
+            // Check if file still exists
+            if !pending.path.exists() {
+                pending_files_clone.write().remove(&pending.id);
+                return false;
             }
-            log::info!("Moved file: {} -> {}", pending.file_name, pending.destination);
-        } else {
-            log::error!("Failed to move file: {} - {:?}", pending.file_name, result.error);
+            
+            let result = move_file(
+                &pending.path,
+                &dest_root,
+                &pending.destination,
+                &conflict_res,
+            );
+            
+            // Remove from pending after move attempt
+            pending_files_clone.write().remove(&pending.id);
+            
+            if result.success {
+                let record = MoveRecord {
+                    id: Uuid::new_v4().to_string(),
+                    original_path: result.source,
+                    new_path: result.destination,
+                    rule_name: pending.rule_name,
+                    timestamp: Utc::now(),
+                    file_size: pending.file_size,
+                    can_undo: true,
+                };
+                history_clone.add(record);
+                log::info!("Moved file: {}", pending.file_name);
+                true
+            } else {
+                log::error!("Failed to move file: {} - {:?}", pending.file_name, result.error);
+                false
+            }
+        })
+    }).collect();
+    
+    // Wait for all moves to complete and count successes
+    for handle in handles {
+        if handle.join().unwrap_or(false) {
+            successful_moves += 1;
         }
+    }
+    
+    // Batch update config once after all moves
+    if successful_moves > 0 {
+        let mut c = app_config.write();
+        c.total_files_moved = c.total_files_moved.saturating_add(successful_moves);
+        let to_save = c.clone();
+        drop(c);
+        let _ = crate::config::save_config(&to_save);
     }
 }

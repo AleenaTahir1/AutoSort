@@ -72,8 +72,8 @@ export function useHistory() {
     };
     init();
 
-    // Refresh stats periodically
-    const interval = setInterval(refresh, 5000);
+    // Refresh stats every second to show live updates
+    const interval = setInterval(refresh, 1000);
     return () => clearInterval(interval);
   }, [refresh]);
 

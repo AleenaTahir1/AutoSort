@@ -55,7 +55,7 @@ impl Default for Config {
         Self {
             watch_folder: downloads.clone(),
             destination_root: downloads,
-            grace_period_seconds: 30,
+            grace_period_seconds: 5,
             rules: default_rules(),
             run_on_startup: false,
             minimize_to_tray: true,

@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Play, Pause, RefreshCw, Power, HelpCircle, X, Check } from "lucide-react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Stats } from "./Stats";
 import { PendingFiles } from "./PendingFiles";
 import { RecentActivity } from "./RecentActivity";
 import { useWatcher } from "@/hooks/useWatcher";
 import { useHistory } from "@/hooks/useHistory";
+import { useConfig } from "@/hooks/useConfig";
+import { notifyFilesMoved } from "@/lib/notifications";
 
 interface DashboardProps {
   isDarkMode?: boolean;
@@ -27,6 +30,30 @@ export function Dashboard({ isDarkMode }: DashboardProps) {
   } = useWatcher();
 
   const { records, stats, undo, clear } = useHistory();
+  const { config } = useConfig();
+  
+  // Track stats to detect when files are moved
+  const prevTotalRef = useRef(stats.total);
+  
+  useEffect(() => {
+    const prevTotal = prevTotalRef.current;
+    const currentTotal = stats.total;
+    
+    // If total increased, files were moved - notify only when app is in background (like other apps)
+    if (currentTotal > prevTotal && config?.show_notifications) {
+      const movedCount = currentTotal - prevTotal;
+      getCurrentWindow()
+        .isFocused()
+        .then((focused) => {
+          if (!focused) {
+            notifyFilesMoved(movedCount);
+          }
+        })
+        .catch(() => {});
+    }
+    
+    prevTotalRef.current = currentTotal;
+  }, [stats.total, config?.show_notifications]);
 
   const handleScan = async () => {
     setIsScanning(true);
