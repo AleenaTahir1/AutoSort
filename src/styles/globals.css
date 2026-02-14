@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Neo-Brutalism UI Library exact styles */
+@layer base {
+  html, body, #root {
+    @apply h-full w-full overflow-hidden m-0 p-0;
+  }
+  
+  body {
+    @apply bg-main text-black font-semibold antialiased;
+    font-family: 'Space Grotesk', 'DM Sans', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  /* Buttons - exact neo-brutalism-ui style */
+  .btn {
+    @apply px-4 py-2.5 font-bold transition-all duration-150 
+           border-2 border-black bg-cyan-300
+           shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
+           hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]
+           active:shadow-none active:translate-x-[4px] active:translate-y-[4px];
+  }
+
+  .btn-primary {
+    @apply btn bg-cyan-300;
+  }
+
+  .btn-secondary {
+    @apply btn bg-white;
+  }
+
+  .btn-lime {
+    @apply btn bg-lime-300;
+  }
+
+  .btn-pink {
+    @apply btn bg-pink-300;
+  }
+
+  .btn-yellow {
+    @apply btn bg-yellow-300;
+  }
+
+  .btn-orange {
+    @apply btn bg-orange-300;
+  }
+
+  .btn-violet {
+    @apply btn bg-violet-300;
+  }
+
+  .btn-red {
+    @apply btn bg-red-300;
+  }
+
+  .btn-sm {
+    @apply px-3 py-1.5 text-sm;
+  }
+
+  .btn-lg {
+    @apply px-6 py-3 text-lg;
+  }
+
+  /* Cards - exact neo-brutalism-ui style */
+  .card {
+    @apply bg-white border-2 border-black
+           shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  /* Inputs - neo-brutalism style */
+  .input {
+    @apply w-full px-4 py-2.5 font-medium 
+           border-2 border-black bg-white 
+           shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+           focus:outline-none focus:ring-0;
+  }
+
+  /* Badge/Tag style */
+  .badge {
+    @apply inline-flex items-center px-2 py-1 text-xs font-bold
+           border-2 border-black bg-yellow-300
+           shadow-[2px_2px_0px_0px_rgba(0,0,0,1)];
+  }
+}
+
+/* Custom scrollbar - brutalist */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-main border-l-2 border-black;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-black rounded-none;
+}
+
+@keyframes countdown {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+.countdown-bar {
+  animation: countdown linear forwards;
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Default capabilities for AutoSort",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:default",
+    "core:window:allow-close",
+    "core:window:allow-minimize",
+    "core:window:allow-maximize",
+    "core:window:allow-unmaximize",
+    "core:window:allow-is-maximized",
+    "core:window:allow-start-dragging",
+    "dialog:default",
+    "dialog:allow-open",
+    "notification:default",
+    "notification:allow-notify",
+    "shell:default",
+    "shell:allow-open"
+  ]
+}
