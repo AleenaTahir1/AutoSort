@@ -18,13 +18,23 @@ Keep any folder clean with automatic file sorting based on custom rules.
 
 ## Screenshots
 
-<div align="center">
+### Dashboard
 
-| Dashboard | Rules | Settings |
-|:---------:|:-----:|:--------:|
-| <img src="screenshots/dashboard.png" width="280" /> | <img src="screenshots/rules.png" width="280" /> | <img src="screenshots/settings.png" width="280" /> |
+<p align="center">
+  <img src="screenshots/dashboard.png" alt="AutoSort Dashboard" width="800" />
+</p>
 
-</div>
+### Rules
+
+<p align="center">
+  <img src="screenshots/rules.png" alt="AutoSort Rules" width="800" />
+</p>
+
+### Settings
+
+<p align="center">
+  <img src="screenshots/settings.png" alt="AutoSort Settings" width="800" />
+</p>
 
 ---
 
