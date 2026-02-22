@@ -24,7 +24,7 @@ export function Sidebar({ activeTab, onTabChange, isDarkMode }: SidebarProps) {
       {/* Logo */}
       <div className={`p-4 border-b-2 flex-shrink-0 ${isDarkMode ? "border-white" : "border-black"}`}>
         <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="AutoSort" className="w-10 h-10" />
+          <img src="/icon.svg" alt="AutoSort" className="w-10 h-10" />
           <div>
             <h1 className={`text-lg font-bold ${isDarkMode ? "text-white" : "text-black"}`}>
               AutoSort
